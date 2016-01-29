@@ -154,7 +154,7 @@ CommandSet.default = CommandSet.default.add({
   }
 })
 
-class FindResult {
+class FindOptions {
   constructor(pm, findTerm, replaceWith, caseSensitive = true) {
     this.pm = pm
     this.findTerm = findTerm
@@ -169,6 +169,80 @@ class FindResult {
   results() {
     return findInNode(this.pm.doc, this)
   }
+}
+
+class FindResult {
+    constructor(pm, options) {
+        this.options = options
+        this.highlightingResults = false
+        this.pm = pm
+
+        this._onTransform = (transform) => {
+            let {from, to} = rangeFromTransform(transform)
+            processNodes(pm, from, to, options)
+        }
+
+    }
+
+    matches(path = []) {
+        let node = this.pm.doc.pathNodes(path).unshift()
+        return findInNode(node, this.options, path)
+    }
+
+    highlightResults(selections = this.matches()) {
+        if(selections.length > 0) {
+            markFinds(this.pm, selections)
+            this.pm.on('transform', this._onTransform)
+            this.highlightingResults = true
+        }
+    }
+
+    unhighlightResults() {
+        if(!this.highlightResults) {
+            removeFinds()
+            this.pm.off('transform', this._onTransform)
+            this.highlightingResults = false
+        }
+    }
+
+    selectNextResult() {
+        this.lastSelected = selectNext(this.pm, this.matchs())
+        return this.lastSelected
+    }
+
+    replace(andSelectNext = this.pm.find.options.findNextAfterReplace) {
+        // if the current selection isn't the find term, find next first
+        if(this.pm.doc.sliceBetween(this.pm.selection.from, this.pm.selection.to).textContent !== findTerm) {
+            // if find next yields nothing, bail
+            if(!this.selectNextResult()) {
+                return null
+            }
+        }
+
+        let tr = this.pm.tr.typeText(replaceWith).apply({scrollIntoView: true})
+
+        if(andSelectNext) {
+          let otherResults = this.matches()
+          this.lastSelected = selectNext(pm, otherResults)
+        }
+
+        return tr
+    }
+
+    replaceAll() {
+        let selections = this.matches(),
+            selection, transform;
+
+        var transforms = []
+
+        while(selection = selections.shift()) {
+          this.pm.setSelection(selection)
+          transform = this.pm.tr.typeText(replaceWith).apply({scrollIntoView: true})
+          transforms.push(transform)
+          selections = selections.map(s => s.map(this.pm.doc, transform.maps[0]))
+        }
+        return transforms
+    }
 }
 
 class Find {
@@ -216,7 +290,7 @@ class Find {
   }
 
   find(findTerm, node = this.pm.doc) {
-    this.findResult = new FindResult(this.pm, findTerm)
+    this.findResult = new FindOptions(this.pm, findTerm)
 
     let selections = this.findResult.results()
     selectNext(this.pm, selections)
@@ -244,7 +318,7 @@ class Find {
   }
 
   replace(findTerm, replaceWith) {
-    this.findResult = new FindResult(this.pm, findTerm, replaceWith)
+    this.findResult = new FindOptions(this.pm, findTerm, replaceWith)
 
     if(this.pm.doc.sliceBetween(this.pm.selection.from, this.pm.selection.to).textContent !== findTerm) {
       if(!selectNext(pm, this.findResult.results())) {
@@ -267,7 +341,7 @@ class Find {
   }
 
   replaceAll(findTerm, replaceWith) {
-    this.findResult = new FindResult(this.pm, findTerm, replaceWith)
+    this.findResult = new FindOptions(this.pm, findTerm, replaceWith)
 
     let selections = this.findResult.results(),
         selection, transform;
