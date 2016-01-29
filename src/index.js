@@ -91,15 +91,15 @@ function defaultFindTerm(pm) {
   if(!pm.selection.empty) {
     return pm.doc.sliceBetween(pm.selection.from, pm.selection.to).textContent
   }
-  if(pm.mod.find.findResult) {
-    return pm.mod.find.findResult.findTerm
+  if(pm.mod.find.findOptions) {
+    return pm.mod.find.findOptions.findTerm
   }
   return null
 }
 
 function defaultReplaceWith(pm) {
-  if(pm.mod.find.findResult) {
-    return pm.mod.find.findResult.replaceWith
+  if(pm.mod.find.findOptions) {
+    return pm.mod.find.findOptions.replaceWith
   }
   return null
 }
@@ -154,7 +154,7 @@ CommandSet.default = CommandSet.default.add({
   }
 })
 
-class FindResult {
+class FindOptions {
   constructor(pm, findTerm, replaceWith, caseSensitive = true) {
     this.pm = pm
     this.findTerm = findTerm
@@ -174,7 +174,7 @@ class FindResult {
 class Find {
   constructor(pm, options) {
     this.pm = pm
-    this.findResult = null
+    this.findOptions = null
 
     this.options = Object.create(this.defaultOptions)
     for(let option in options){
@@ -184,9 +184,9 @@ class Find {
     pm.mod.find = this
 
     pm.on("transform", function(transform) {
-      if(pm.mod.find.options.highlightAll && pm.mod.find.findResult) {
+      if(pm.mod.find.options.highlightAll && pm.mod.find.findOptions) {
         let {from, to} = rangeFromTransform(transform)
-        processNodes(pm, from, to, pm.mod.find.findResult)
+        processNodes(pm, from, to, pm.mod.find.findOptions)
       }
     })
 
@@ -206,19 +206,19 @@ class Find {
     }
   }
 
-  get findResult() {
-    return this._findResult
+  get findOptions() {
+    return this._findOptions
   }
 
-  set findResult(val) {
-    if(this._findResult) this.clearFind() //clear out existing results if there are any
-    this._findResult = val
+  set findOptions(val) {
+    if(this._findOptions) this.clearFind() //clear out existing results if there are any
+    this._findOptions = val
   }
 
   find(findTerm, node = this.pm.doc) {
-    this.findResult = new FindResult(this.pm, findTerm)
+    this.findOptions = new FindOptions(this.pm, findTerm)
 
-    let selections = this.findResult.results()
+    let selections = this.findOptions.results()
     selectNext(this.pm, selections)
 
     if(this.options.highlightAll) {
@@ -229,8 +229,8 @@ class Find {
   }
 
   findNext() {
-    if(this.findResult) {
-      let selections = this.findResult.results()
+    if(this.findOptions) {
+      let selections = this.findOptions.results()
       return selectNext(pm, selections)
     }
     return null
@@ -240,14 +240,14 @@ class Find {
     if(this.options.highlightAll) {
       removeFinds(this.pm)
     }
-    this._findResult = null
+    this._findOptions = null
   }
 
   replace(findTerm, replaceWith) {
-    this.findResult = new FindResult(this.pm, findTerm, replaceWith)
+    this.findOptions = new FindOptions(this.pm, findTerm, replaceWith)
 
     if(this.pm.doc.sliceBetween(this.pm.selection.from, this.pm.selection.to).textContent !== findTerm) {
-      if(!selectNext(pm, this.findResult.results())) {
+      if(!selectNext(pm, this.findOptions.results())) {
         return false
       }
     }
@@ -255,7 +255,7 @@ class Find {
 
     if(this.options.findNextAfterReplace) {
 
-      let otherResults = this.findResult.results()
+      let otherResults = this.findOptions.results()
       if(this.options.highlightAll && otherResults.length) {
         markFinds(pm, otherResults)
       }
@@ -267,9 +267,9 @@ class Find {
   }
 
   replaceAll(findTerm, replaceWith) {
-    this.findResult = new FindResult(this.pm, findTerm, replaceWith)
+    this.findOptions = new FindOptions(this.pm, findTerm, replaceWith)
 
-    let selections = this.findResult.results(),
+    let selections = this.findOptions.results(),
         selection, transform;
 
     while(selection = selections.shift()) {
