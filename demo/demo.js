@@ -1,12 +1,13 @@
 import {ProseMirror} from "prosemirror/dist/edit/main"
 import {fromDOM} from "prosemirror/dist/format"
 import {defaultSchema as schema} from "prosemirror/dist/model"
+import {updateCommands, CommandSet} from "prosemirror/dist/edit/command"
 
 import "prosemirror/dist/inputrules/autoinput"
 import "prosemirror/dist/menu/tooltipmenu"
 import "prosemirror/dist/menu/menubar"
 import "prosemirror/dist/collab"
-import "../src"
+import {findCommands} from "../src"
 
 let te = document.querySelector("#content")
 te.style.display = "none"
@@ -40,7 +41,7 @@ class DummyServer {
 }
 
 function makeEditor(where, collab) {
-  return new ProseMirror({
+  let pm = new ProseMirror({
     place: document.querySelector(where),
     autoInput: true,
     tooltipMenu: {selectedBlockMenu: true},
@@ -51,6 +52,8 @@ function makeEditor(where, collab) {
       highlightAll: true
     }
   })
+  updateCommands(pm, CommandSet.default = CommandSet.default.add(findCommands))
+  return pm
 }
 
 window.pm = window.pm2 = null
