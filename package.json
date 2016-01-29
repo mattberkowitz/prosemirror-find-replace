@@ -4,9 +4,11 @@
   "description": "Find and Replace plugin for ProseMirror",
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node test/start.js",
     "demo": "moduleserve --transform babel demo",
-    "dist": "babel -d dist src"
+    "dist": "babel -d dist src",
+    "dist-watch": "babel -w -d dist src",
+    "prepublish": "rimraf dist/* && babel -d dist src"
   },
   "repository": {
     "type": "git",
@@ -24,7 +26,6 @@
   "devDependencies": {
     "babel-core": "^6.4.5",
     "babel-preset-es2015": "^6.3.13",
-    "moduleserve": "^0.6.1",
-    "prosemirror": "^0.2.0"
+    "moduleserve": "^0.6.1"
   }
 }
