@@ -106,7 +106,7 @@ function defaultReplaceWith(pm) {
 
 
 //Unsure if this is the correct way to add new commands
-CommandSet.default = CommandSet.default.add({
+export Commands {
   find: {
     label: "Find occurances of a string",
     run: function(pm, findTerm) {
@@ -152,7 +152,7 @@ CommandSet.default = CommandSet.default.add({
     ],
     keys: ["Shift-Alt-Mod-F"]
   }
-})
+}
 
 class FindOptions {
   constructor(pm, findTerm, replaceWith, caseSensitive = true) {
@@ -201,8 +201,7 @@ class Find {
     return {
       highlightAll: true, //add a MarkedRange to all matchs
       findNextAfterReplace: true, //execute a find after
-      findClass: "find", //class to add to highlightAll MarkedRanges
-      noCommands: false //set to true to skip adding commands, useful for non-standard UI
+      findClass: "find" //class to add to highlightAll MarkedRanges
     }
   }
 
@@ -248,7 +247,7 @@ class Find {
 
     if(this.pm.doc.sliceBetween(this.pm.selection.from, this.pm.selection.to).textContent !== findTerm) {
       if(!selectNext(pm, this.findOptions.results())) {
-        return false
+        return null
       }
     }
     this.pm.tr.typeText(replaceWith).apply({scrollIntoView: true})
@@ -263,21 +262,23 @@ class Find {
 
     }
 
-    return true
+    return transform
   }
 
   replaceAll(findTerm, replaceWith) {
     this.findOptions = new FindOptions(this.pm, findTerm, replaceWith)
 
     let selections = this.findOptions.results(),
-        selection, transform;
+        selection, transform,
+        transforms = [];
 
     while(selection = selections.shift()) {
       this.pm.setSelection(selection)
       transform = this.pm.tr.typeText(replaceWith).apply({scrollIntoView: true})
+      transforms.push(transform)
       selections = selections.map(s => s.map(this.pm.doc, transform.maps[0]))
     }
-    return selections.length
+    return transforms
   }
 
 
