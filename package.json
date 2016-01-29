@@ -1,0 +1,29 @@
+{
+  "name": "prosemirror-find-replace",
+  "version": "0.1.0",
+  "description": "Find and Replace plugin for ProseMirror",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "demo": "moduleserve --transform babel demo",
+    "dist": "babel -d dist src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mattberkowitz/prosemirror-find-replace.git"
+  },
+  "author": "Matthew Berkowitz",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mattberkowitz/prosemirror-find-replace/issues"
+  },
+  "homepage": "https://github.com/mattberkowitz/prosemirror-find-replace#readme",
+  "dependencies": {
+    "prosemirror": "^0.2.0"
+  },
+  "devDependencies": {
+    "babel-core": "^6.4.5",
+    "babel-preset-es2015": "^6.3.13",
+    "moduleserve": "^0.6.1"
+  }
+}
