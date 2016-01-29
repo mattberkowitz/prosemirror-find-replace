@@ -1,5 +1,4 @@
 import {ProseMirror} from "prosemirror/dist/edit/main"
-import {Pos, Node, LinkStyle} from "prosemirror/dist/model"
 import {fromDOM} from "prosemirror/dist/format"
 import {defaultSchema as schema} from "prosemirror/dist/model"
 
@@ -39,8 +38,6 @@ class DummyServer {
       if (this.pms[i] != pm) this.pms[i].mod.collab.receive(steps)
   }
 }
-
-window.Pos = Pos
 
 function makeEditor(where, collab) {
   return new ProseMirror({
