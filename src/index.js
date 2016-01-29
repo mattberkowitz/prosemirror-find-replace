@@ -106,7 +106,7 @@ function defaultReplaceWith(pm) {
 
 
 //Unsure if this is the correct way to add new commands
-export Commands {
+export var commands = {
   find: {
     label: "Find occurances of a string",
     run: function(pm, findTerm) {
