@@ -1,7 +1,9 @@
-import {defineOption} from "prosemirror/dist/edit"
+import {defineOption, ProseMirror} from "prosemirror/dist/edit"
 import {updateCommands, Command, CommandSet} from "prosemirror/dist/edit/command"
 import {TextSelection} from "prosemirror/dist/edit/selection"
 import {Textblock, Pos} from "prosemirror/dist/model"
+
+window.ProseMirror = ProseMirror
 
 defineOption("find", false, (pm, value) => {
   if (pm.mod.find) {
@@ -221,7 +223,7 @@ class Find {
     selectNext(this.pm, selections)
 
     if(this.options.highlightAll) {
-      markFinds(pm, selections)
+      markFinds(this.pm, selections)
     }
 
     return selections
@@ -230,7 +232,7 @@ class Find {
   findNext() {
     if(this.findOptions) {
       let selections = this.findOptions.results()
-      return selectNext(pm, selections)
+      return selectNext(this.pm, selections)
     }
     return null
   }
@@ -246,7 +248,7 @@ class Find {
     this.findOptions = new FindOptions(this.pm, findTerm, replaceWith)
 
     if(this.pm.doc.sliceBetween(this.pm.selection.from, this.pm.selection.to).textContent !== findTerm) {
-      if(!selectNext(pm, this.findOptions.results())) {
+      if(!selectNext(this.pm, this.findOptions.results())) {
         return null
       }
     }
@@ -256,9 +258,9 @@ class Find {
 
       let otherResults = this.findOptions.results()
       if(this.options.highlightAll && otherResults.length) {
-        markFinds(pm, otherResults)
+        markFinds(this.pm, otherResults)
       }
-      selectNext(pm, otherResults)
+      selectNext(this.pm, otherResults)
 
     }
 

@@ -20,7 +20,7 @@
     "url": "https://github.com/mattberkowitz/prosemirror-find-replace/issues"
   },
   "homepage": "https://github.com/mattberkowitz/prosemirror-find-replace#readme",
-  "dependencies": {
+  "peerDependencies": {
     "prosemirror": "^0.2.0"
   },
   "devDependencies": {
