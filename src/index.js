@@ -106,8 +106,6 @@ function defaultReplaceWith(pm) {
   return null
 }
 
-
-//Unsure if this is the correct way to add new commands
 export var findCommands = {
   find: {
     label: "Find occurances of a string",
@@ -186,13 +184,11 @@ class Find {
     pm.mod.find = this
 
     pm.on("transform", function(transform) {
-      if(pm.mod.find.options.highlightAll && pm.mod.find.findOptions) {
+      if(pm.mod.find.findOptions) {
         let {from, to} = rangeFromTransform(transform)
         processNodes(pm, from, to, pm.mod.find.findOptions)
       }
     })
-
-    if(!this.options.noCommands) updateCommands(pm, CommandSet.default)
   }
 
   detach() {
@@ -201,9 +197,8 @@ class Find {
 
   get defaultOptions() {
     return {
-      highlightAll: true, //add a MarkedRange to all matchs
-      findNextAfterReplace: true, //execute a find after
-      findClass: "find" //class to add to highlightAll MarkedRanges
+      autoSelectNext: true, //move selection to next find after 'find' or 'replace'
+      findClass: "find" //class to add to MarkedRanges
     }
   }
 
@@ -216,20 +211,24 @@ class Find {
     this._findOptions = val
   }
 
-  find(findTerm, node = this.pm.doc) {
-    this.findOptions = new FindOptions(this.pm, findTerm)
+  find(findTerm, caseSensitive = true,  node = this.pm.doc) {
+    this.findOptions = new FindOptions(this.pm, findTerm, null, caseSensitive)
 
     let selections = this.findOptions.results()
-    selectNext(this.pm, selections)
 
-    if(this.options.highlightAll) {
-      markFinds(this.pm, selections)
+    if(this.options.autoSelectNext) {
+      selectNext(this.pm, selections)
     }
+
+    markFinds(this.pm, selections)
 
     return selections
   }
 
-  findNext() {
+  findNext(findTerm, caseSensitive = true) {
+    if(findTerm) {
+      this.findOptions = new FindOptions(this.pm, findTerm, null, caseSensitive)
+    }
     if(this.findOptions) {
       let selections = this.findOptions.results()
       return selectNext(this.pm, selections)
@@ -238,26 +237,26 @@ class Find {
   }
 
   clearFind() {
-    if(this.options.highlightAll) {
-      removeFinds(this.pm)
-    }
+    removeFinds(this.pm)
     this._findOptions = null
   }
 
-  replace(findTerm, replaceWith) {
-    this.findOptions = new FindOptions(this.pm, findTerm, replaceWith)
+  replace(findTerm, replaceWith, caseSensitive = true) {
+    this.findOptions = new FindOptions(this.pm, findTerm, replaceWith, caseSensitive)
 
-    if(this.pm.doc.sliceBetween(this.pm.selection.from, this.pm.selection.to).textContent !== findTerm) {
+    if(!this.pm.doc.sliceBetween(this.pm.selection.from, this.pm.selection.to).textContent.match(this.findOptions.findRegExp)) {
       if(!selectNext(this.pm, this.findOptions.results())) {
         return null
       }
     }
-    this.pm.tr.typeText(replaceWith).apply({scrollIntoView: true})
 
-    if(this.options.findNextAfterReplace) {
+    let transform = this.pm.tr.typeText(replaceWith).apply({scrollIntoView: true})
+
+    if(this.options.autoSelectNext) {
 
       let otherResults = this.findOptions.results()
-      if(this.options.highlightAll && otherResults.length) {
+      if(otherResults.length) {
+        removeFinds(this.pm)
         markFinds(this.pm, otherResults)
       }
       selectNext(this.pm, otherResults)
@@ -267,8 +266,8 @@ class Find {
     return transform
   }
 
-  replaceAll(findTerm, replaceWith) {
-    this.findOptions = new FindOptions(this.pm, findTerm, replaceWith)
+  replaceAll(findTerm, replaceWith, caseSensitive = true) {
+    this.findOptions = new FindOptions(this.pm, findTerm, replaceWith, caseSensitive)
 
     let selections = this.findOptions.results(),
         selection, transform,
