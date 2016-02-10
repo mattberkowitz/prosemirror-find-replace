@@ -16,12 +16,10 @@ defineOption("find", false, (pm, value) => {
 })
 
 
-//Currently this only ever is executed on pm.doc, but it could be used on a subtree also
+//Recursively finds matches within a given node
 function findInNode(node, findResult, path = []) {
   let ret = []
 
-  //Not sure this is the right way to do this, but it works. node.isText() drills down to
-  //individual text fragments, which wouldn't catch something like blo*ck* (markdown) searching for "block"
   if(node.isTextblock) {
     let index = 0, foundAt
     while((foundAt = node.textContent.slice(index).search(findResult.findRegExp)) > -1) {
@@ -52,17 +50,21 @@ function selectNext(pm, selections) {
 }
 
 
+//Marks selections with the findClass specificed in options
 function markFinds(pm, finds) {
-  //I added volatile option to MarkedRange, to destroy a range when it's content changes
   finds.forEach(selection => {
     pm.markRange(selection.from, selection.to, {className: pm.mod.find.options.findClass})
   })
 }
 
+
+//Removes MarkedRanges that reside within a given node
 function removeFinds(pm, node = pm.doc) {
   pm.ranges.ranges.filter(r => r.options.className === pm.mod.find.options.findClass && pm.doc.pathNodes(r.from.path).indexOf(node) > -1).forEach(r => pm.ranges.removeRange(r))
 }
 
+
+//Calculates the start and end nodes of a transform
 function rangeFromTransform(tr) {
   let from, to
   for (let i = 0; i < tr.steps.length; i++) {
@@ -75,6 +77,8 @@ function rangeFromTransform(tr) {
   return {from, to}
 }
 
+
+//Removes and recalcualtes finds between a start and end point
 function processNodes (pm, from, to, findResult) {
   if(!findResult) return
   let processed = []
@@ -89,6 +93,9 @@ function processNodes (pm, from, to, findResult) {
   pm.doc.nodesBetween(from, to, (node, path, parent) => processNode(node, path))
 }
 
+
+//Calculates default value for find input
+//Selected text > Last search > Empty
 function defaultFindTerm(pm) {
   if(!pm.selection.empty) {
     return pm.doc.sliceBetween(pm.selection.from, pm.selection.to).textContent
@@ -99,6 +106,8 @@ function defaultFindTerm(pm) {
   return null
 }
 
+//Calculates default value for replace input
+//Last search > Empty
 function defaultReplaceWith(pm) {
   if(pm.mod.find.findOptions) {
     return pm.mod.find.findOptions.replaceWith
@@ -106,6 +115,8 @@ function defaultReplaceWith(pm) {
   return null
 }
 
+
+//A default set of commands
 export var findCommands = {
   find: {
     label: "Find occurances of a string",
@@ -154,6 +165,8 @@ export var findCommands = {
   }
 }
 
+
+//Class to handle a set of find/replace terms and results
 class FindOptions {
   constructor(pm, findTerm, replaceWith, caseSensitive = true) {
     this.pm = pm
@@ -162,14 +175,18 @@ class FindOptions {
     this.caseSensitive = caseSensitive
   }
 
+  //Constructs a regex based on find term and case sensitivity
   get findRegExp() {
     return RegExp(this.findTerm, !this.caseSensitive ? "i" : "")
   }
 
+  //Calculates results for a set of terms
   results() {
     return findInNode(this.pm.doc, this)
   }
 }
+
+
 
 class Find {
   constructor(pm, options) {
@@ -183,18 +200,24 @@ class Find {
 
     pm.mod.find = this
 
-    pm.on("transform", function(transform) {
+    //Recalculate changed blocks on transform
+    this.onTransform = function(transform) {
+      //If there was a find
       if(pm.mod.find.findOptions) {
         let {from, to} = rangeFromTransform(transform)
         processNodes(pm, from, to, pm.mod.find.findOptions)
       }
-    })
+    }
+
+    pm.on("transform", this.onTransform)
   }
 
   detach() {
     this.clearFind()
+    pm.off("transform", this.onTransform)
   }
 
+  //Default set of options
   get defaultOptions() {
     return {
       autoSelectNext: true, //move selection to next find after 'find' or 'replace'
@@ -202,16 +225,20 @@ class Find {
     }
   }
 
+  //Gets last find options
   get findOptions() {
     return this._findOptions
   }
 
+  //Clears last find display and sets new find options
   set findOptions(val) {
     if(this._findOptions) this.clearFind() //clear out existing results if there are any
     this._findOptions = val
   }
 
-  find(findTerm, caseSensitive = true,  node = this.pm.doc) {
+  //Find and mark instnaces of a find term, optionally case insensitive
+  //Will move selection to the next match, if autoSelectNext option is true
+  find(findTerm, caseSensitive = true) {
     this.findOptions = new FindOptions(this.pm, findTerm, null, caseSensitive)
 
     let selections = this.findOptions.results()
@@ -225,6 +252,7 @@ class Find {
     return selections
   }
 
+  //Moves the selection to the next instance of the find term, optionall case insensitive
   findNext(findTerm, caseSensitive = true) {
     if(findTerm) {
       this.findOptions = new FindOptions(this.pm, findTerm, null, caseSensitive)
@@ -236,11 +264,16 @@ class Find {
     return null
   }
 
+  //Clears find display and nulls out stored find options
   clearFind() {
     removeFinds(this.pm)
     this._findOptions = null
   }
 
+  //Replaces next match of a findTerm with the repalceWith string, optionally case insensitive
+  //If current selection matches the find term it will be replaced
+  //Otherwise, selection  will be moved to the next match and that will be replaced
+  //If options.autoFindNext is true the match that proceeds replaced on will be selected
   replace(findTerm, replaceWith, caseSensitive = true) {
     this.findOptions = new FindOptions(this.pm, findTerm, replaceWith, caseSensitive)
 
@@ -266,6 +299,8 @@ class Find {
     return transform
   }
 
+
+  //Replaces all occurances of a findTerm with the replaceWith string, optionally case insensitive
   replaceAll(findTerm, replaceWith, caseSensitive = true) {
     this.findOptions = new FindOptions(this.pm, findTerm, replaceWith, caseSensitive)
 
