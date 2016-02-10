@@ -48,11 +48,11 @@ function makeEditor(where, collab) {
     menuBar: {float: true},
     doc: doc,
     collab: collab,
+    commands: CommandSet.default.add(findCommands),
     find: {
       highlightAll: true
     }
   })
-  updateCommands(pm, CommandSet.default = CommandSet.default.add(findCommands))
   return pm
 }
 
