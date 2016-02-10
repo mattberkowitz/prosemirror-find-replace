@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/mattberkowitz/prosemirror-find-replace#readme",
   "peerDependencies": {
-    "prosemirror": "^0.3.0"
+    "prosemirror": ">= 0.2.0"
   },
   "devDependencies": {
     "babel-core": "^6.4.5",
