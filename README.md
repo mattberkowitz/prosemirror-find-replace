@@ -49,15 +49,15 @@ let pm = new ProseMirror({
 })
 ```
 
-**Find** *(Meta + F)* - Highlights all matches of find term, selects next one if `autoSelectNext` option is true
+**find** *(Meta + F)* - Highlights all matches of find term, selects next one if `autoSelectNext` option is true
 
-**Find Next** *(Alt + Meta + F)* - Moves selection to next match of previous find
+**findNext** *(Alt + Meta + F)* - Moves selection to next match of previous find
 
-**Replace** *(Shift + Meta + F)* - Finds next match and replaces it
+**replace** *(Shift + Meta + F)* - Finds next match and replaces it
 
-**Replace All** *(Shift + Alt + Meta + F)* - Finds and replaces all matches
+**replaceAll** *(Shift + Alt + Meta + F)* - Finds and replaces all matches
 
-**Clear Finds** *(No shortcut)* - Clears highlighted find results
+**clearFind** *(No shortcut)* - Clears highlighted find results
 
 
 
