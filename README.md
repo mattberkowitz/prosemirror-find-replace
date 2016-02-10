@@ -39,7 +39,7 @@ A simple, default set of commands is included, if you choose to use them:
 
 ```
 import { ProseMirror } from "prosemirror"
-import { updateCommands, CommandSet } from "prosemirror/dist/edit/command"
+import { CommandSet } from "prosemirror/dist/edit/command"
 import { findCommands } from "prosemirror-find-replace"
 
 let pm = new ProseMirror({
