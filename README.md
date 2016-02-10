@@ -38,8 +38,7 @@ The following options can be passed in the find object when ProseMirror is initi
 A simple, default set of commands is included, if you choose to use them:
 
 ```
-import { ProseMirror } from "prosemirror"
-import { CommandSet } from "prosemirror/dist/edit/command"
+import { ProseMirror, CommandSet } from "prosemirror/dist/edit"
 import { findCommands } from "prosemirror-find-replace"
 
 let pm = new ProseMirror({
@@ -63,7 +62,7 @@ let pm = new ProseMirror({
 
 ## Demo
 
-To run a quick demo (based on ProseMirror demo) run the following from the `prosemirrir-find-replcae` directory in command prompt:
+To run a quick demo (based on ProseMirror demo) run the following from the `prosemirror-find-replace` directory in command prompt:
 
 `npm install`
 
