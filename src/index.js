@@ -2,6 +2,7 @@ import {defineOption, ProseMirror} from "prosemirror/dist/edit"
 import {updateCommands, Command, CommandSet} from "prosemirror/dist/edit/command"
 import {TextSelection} from "prosemirror/dist/edit/selection"
 import {Textblock, Pos} from "prosemirror/dist/model"
+import {getNodeEndpoints} from "./util"
 
 window.ProseMirror = ProseMirror
 
@@ -21,9 +22,9 @@ function findInNode(node, findResult, path = []) {
   let ret = []
 
   if(node.isTextblock) {
-    let index = 0, foundAt
+    let index = 0, foundAt, ep = getNodeEndpoints(pm.doc, node)
     while((foundAt = node.textContent.slice(index).search(findResult.findRegExp)) > -1) {
-      let sel = new TextSelection(new Pos(path, index + foundAt), new Pos(path, index + foundAt + findResult.findTerm.length))
+      let sel = new TextSelection(ep.from + index + foundAt + 1, ep.from + index + foundAt + findResult.findTerm.length + 1)
       ret.push(sel)
       index = index + foundAt + findResult.findTerm.length
     }
