@@ -1,11 +1,16 @@
-export function getNodeEndpoints(root, node, offset = 0) {
-  if(root == node) return { from: offset, to: offset + node.nodeSize }
+export function getNodeEndpoints(context, node) {
+  let offset = 0
+
+  if(context === node) return { from: offset, to: offset + node.nodeSize }
 
   if(node.isBlock) {
-    for(let i=0; i<root.content.content.length; i++) {
-      let result = getNodeEndpoints(root.content.content[i], node, offset)
-      if(result) return result;
-      offset = offset += root.content.content[i].nodeSize
+    for(let i=0; i<context.content.content.length; i++) {
+      let result = getNodeEndpoints(context.content.content[i], node)
+      if(result) return {
+        from: result.from + offset + (context.type.kind === null ? 0 : 1),
+        to: result.to + offset + (context.type.kind === null ? 0 : 1)
+      }
+      offset += context.content.content[i].nodeSize
     }
     return null
   } else {
