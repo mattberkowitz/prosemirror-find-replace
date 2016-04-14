@@ -18,7 +18,7 @@ defineOption("find", false, (pm, value) => {
 
 
 //Recursively finds matches within a given node
-function findInNode(node, findResult, path = []) {
+function findInNode(node, findResult) {
   let ret = []
 
   if(node.isTextblock) {
@@ -29,7 +29,7 @@ function findInNode(node, findResult, path = []) {
       index = index + foundAt + findResult.findTerm.length
     }
   } else {
-    node.content.forEach((child, i) => ret = ret.concat(findInNode(child, findResult, path.concat(i))))
+    node.content.forEach((child, i) => ret = ret.concat(findInNode(child, findResult)))
   }
   return ret
 }
