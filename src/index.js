@@ -24,7 +24,7 @@ function findInNode(node, findResult) {
   if(node.isTextblock) {
     let index = 0, foundAt, ep = getNodeEndpoints(pm.doc, node)
     while((foundAt = node.textContent.slice(index).search(findResult.findRegExp)) > -1) {
-      let sel = new TextSelection(ep.from + index + foundAt + 1, ep.from + index + foundAt + findResult.findTerm.length + 1)
+      let sel = new TextSelection(ep.from + index + foundAt , ep.from + index + foundAt + findResult.findTerm.length )
       ret.push(sel)
       index = index + foundAt + findResult.findTerm.length
     }
@@ -40,13 +40,16 @@ function selectNext(pm, selections) {
   if(selections.length === 0) {
     return null
   }
+
   for(let i=0;i<selections.length;i++) {
-    if(pm.selection.to.cmp(selections[i].from) <= 0) {
+    if(pm.selection.to <= selections[i].from ) {
       pm.setSelection(selections[i])
+      pm.scrollIntoView(selections[i].head)
       return selections[i]
     }
   }
   pm.setSelection(selections[0])
+  pm.scrollIntoView(selections[0].head)
   return selections[0];
 }
 
@@ -61,7 +64,7 @@ function markFinds(pm, finds) {
 
 //Removes MarkedRanges that reside within a given node
 function removeFinds(pm, node = pm.doc) {
-  pm.ranges.ranges.filter(r => r.options.className === pm.mod.find.options.findClass && pm.doc.pathNodes(r.from.path).indexOf(node) > -1).forEach(r => pm.ranges.removeRange(r))
+  pm.ranges.ranges.filter(r => r.options.className === pm.mod.find.options.findClass && pm.doc.resolve(r.from).path.indexOf(node) > -1).forEach(r => pm.ranges.removeRange(r))
 }
 
 
@@ -131,9 +134,12 @@ export var findCommands = {
   },
   findNext: {
     label: "Find next occurance of last searched string",
-    run: function(pm) {
-      pm.mod.find.findNext()
+    run: function(pm,findTerm) {
+      pm.mod.find.findNext(findTerm)
     },
+    params:[
+      {label: "Find", type: "text", prefill: defaultFindTerm}
+    ],
     keys: ["Alt-Mod-F"]
   },
   clearFind: {
@@ -244,11 +250,13 @@ class Find {
 
     let selections = this.findOptions.results()
 
+    markFinds(this.pm, selections)
+
     if(this.options.autoSelectNext) {
       selectNext(this.pm, selections)
     }
 
-    markFinds(this.pm, selections)
+
 
     return selections
   }
@@ -260,6 +268,7 @@ class Find {
     }
     if(this.findOptions) {
       let selections = this.findOptions.results()
+      markFinds(this.pm, selections)
       return selectNext(this.pm, selections)
     }
     return null
@@ -278,7 +287,7 @@ class Find {
   replace(findTerm, replaceWith, caseSensitive = true) {
     this.findOptions = new FindOptions(this.pm, findTerm, replaceWith, caseSensitive)
 
-    if(!this.pm.doc.sliceBetween(this.pm.selection.from, this.pm.selection.to).textContent.match(this.findOptions.findRegExp)) {
+    if(!this.pm.doc.slice(this.pm.selection.from, this.pm.selection.to).content.textContent.match(this.findOptions.findRegExp)) {
       if(!selectNext(this.pm, this.findOptions.results())) {
         return null
       }
