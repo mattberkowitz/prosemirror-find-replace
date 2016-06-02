@@ -102,7 +102,7 @@ function processNodes (pm, from, to, findResult) {
 //Selected text > Last search > Empty
 function defaultFindTerm(pm) {
   if(!pm.selection.empty) {
-    return pm.doc.sliceBetween(pm.selection.from, pm.selection.to).textContent
+    return pm.doc.slice(pm.selection.from, pm.selection.to).content.textContent
   }
   if(pm.mod.find.findOptions) {
     return pm.mod.find.findOptions.findTerm
@@ -135,11 +135,8 @@ export var findCommands = {
   findNext: {
     label: "Find next occurance of last searched string",
     run: function(pm,findTerm) {
-      pm.mod.find.findNext(findTerm)
+      pm.mod.find.findNext()
     },
-    params:[
-      {label: "Find", type: "text", prefill: defaultFindTerm}
-    ],
     keys: ["Alt-Mod-F"]
   },
   clearFind: {
