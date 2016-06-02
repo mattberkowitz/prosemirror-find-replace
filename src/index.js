@@ -24,7 +24,7 @@ function findInNode(node, findResult) {
   if(node.isTextblock) {
     let index = 0, foundAt, ep = getNodeEndpoints(pm.doc, node)
     while((foundAt = node.textContent.slice(index).search(findResult.findRegExp)) > -1) {
-      let sel = new TextSelection(ep.from + index + foundAt , ep.from + index + foundAt + findResult.findTerm.length )
+      let sel = new TextSelection(ep.from + index + foundAt + 1, ep.from + index + foundAt + findResult.findTerm.length + 1)
       ret.push(sel)
       index = index + foundAt + findResult.findTerm.length
     }
