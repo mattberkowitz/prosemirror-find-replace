@@ -26,3 +26,7 @@ textarea {
 .find {
   background: #ffd700
 }
+
+.activeFind{
+  background: #00ff00
+}
