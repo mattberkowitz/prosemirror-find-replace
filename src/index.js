@@ -43,11 +43,15 @@ function selectNext(pm, selections) {
 
   for(let i=0;i<selections.length;i++) {
     if(pm.selection.to <= selections[i].from ) {
+      removeActiveFind(pm)
+      markActiveFind(pm,selections[i])
       pm.setSelection(selections[i])
       pm.scrollIntoView(selections[i].head)
       return selections[i]
     }
   }
+  removeActiveFind(pm)
+  markActiveFind(pm,selections[0])
   pm.setSelection(selections[0])
   pm.scrollIntoView(selections[0].head)
   return selections[0];
@@ -57,16 +61,24 @@ function selectNext(pm, selections) {
 //Marks selections with the findClass specificed in options
 function markFinds(pm, finds) {
   finds.forEach(selection => {
-    pm.markRange(selection.from, selection.to, {className: pm.mod.find.options.findClass})
+    var matchingRanges = pm.ranges.ranges.filter(function(range){return range.from === selection.from && range.to === selection.to})
+    if(matchingRanges.length === 0){
+      pm.markRange(selection.from, selection.to, {className: pm.mod.find.options.findClass})
+    }
   })
 }
 
-
 //Removes MarkedRanges that reside within a given node
-function removeFinds(pm, node = pm.doc) {
+  function removeFinds(pm, node = pm.doc) {
   pm.ranges.ranges.filter(r => r.options.className === pm.mod.find.options.findClass && pm.doc.resolve(r.from).path.indexOf(node) > -1).forEach(r => pm.ranges.removeRange(r))
 }
 
+function markActiveFind(pm,selection){
+  pm.markRange(selection.from, selection.to, {className: pm.mod.find.options.activeFindClass})
+}
+function removeActiveFind(pm, node = pm.doc){
+  pm.ranges.ranges.filter(r => r.options.className === pm.mod.find.options.activeFindClass && pm.doc.resolve(r.from).path.indexOf(node) > -1).forEach(r => pm.ranges.removeRange(r))
+}
 
 //Calculates the start and end nodes of a transform
 function rangeFromTransform(tr) {
@@ -89,6 +101,7 @@ function processNodes (pm, from, to, findResult) {
   function processNode (node, path) {
     if(node.isTextblock && processed.indexOf(node) === -1) {
       removeFinds(pm, node)
+      removeActiveFind(pm, node)
       let matches = findInNode(node, findResult, [].concat(path))
       markFinds(pm, matches)
       processed.push(node)
@@ -225,7 +238,8 @@ class Find {
   get defaultOptions() {
     return {
       autoSelectNext: true, //move selection to next find after 'find' or 'replace'
-      findClass: "find" //class to add to MarkedRanges
+      findClass: "find", //class to add to MarkedRanges
+      activeFindClass: "activeFind"
     }
   }
 
@@ -274,6 +288,7 @@ class Find {
   //Clears find display and nulls out stored find options
   clearFind() {
     removeFinds(this.pm)
+    removeActiveFind(this.pm)
     this._findOptions = null
   }
 
@@ -297,6 +312,7 @@ class Find {
       let otherResults = this.findOptions.results()
       if(otherResults.length) {
         removeFinds(this.pm)
+        removeActiveFind(this.pm)
         markFinds(this.pm, otherResults)
       }
       selectNext(this.pm, otherResults)
